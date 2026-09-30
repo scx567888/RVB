@@ -71,8 +71,12 @@ namespace sheep_game {
             while (tickAccumulator >= tickInterval) {
                 // 记录状态 用于插值
                 foreach (var pet in sheepWorld.pets) {
-                    pet.renderHandle.lastX = pet.x;
-                    pet.renderHandle.lastY = pet.y;
+                    var renderHandle = pet.renderHandle;
+
+                    if (renderHandle != null) {
+                        renderHandle.lastX = pet.x;
+                        renderHandle.lastY = pet.y;
+                    }
                 }
 
                 // 执行 sheepWorld.tick()
@@ -120,7 +124,7 @@ namespace sheep_game {
         public void renderPet(Pet pet, float alpha) {
             Vector3 renderPosition;
             // 判断是否启用线性插值
-            if (useLerp&&pet.moveIntent.moveMode!=PetMoveMode.TELEPORT) {
+            if (useLerp && pet.moveIntent.moveMode != PetMoveMode.TELEPORT) {
                 renderPosition = Vector3.Lerp(
                     new Vector3(pet.renderHandle.lastX, 0, pet.renderHandle.lastY),
                     new Vector3(pet.x, 0, pet.y),
