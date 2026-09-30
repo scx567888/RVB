@@ -32,7 +32,9 @@ Shader "scx/SheepGame/Pet"
 
             #include "UnityCG.cginc"
 
-            // 对应 Batch 通过属性块绑定的 float Buffer
+            // 每个 Unit 占 8 个 float：
+            // [0] 非零开启闪红
+            // [1] 开始时间
             StructuredBuffer<float> _UnitData;
 
             struct appdata_t
@@ -51,8 +53,8 @@ Shader "scx/SheepGame/Pet"
 
                 UNITY_FOG_COORDS(1)
 
-                // 将闪红开关传给片元 shader
                 float flashEnabled : TEXCOORD2;
+                float flashStartTime : TEXCOORD3;
 
                 UNITY_VERTEX_OUTPUT_STEREO
             };
@@ -71,13 +73,13 @@ Shader "scx/SheepGame/Pet"
                 o.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
                 o.color = v.color;
 
-                // 每个 Unit 连续占 4 个顶点
                 uint unitIndex = vertexID / 4u;
+                uint start = unitIndex * 8u;
 
-                // 每个 Unit 连续占 8 个 float，读取第一个
-                float firstValue = _UnitData[unitIndex * 8u];
+                o.flashEnabled =
+                    _UnitData[start] != 0.0 ? 1.0 : 0.0;
 
-                o.flashEnabled = firstValue != 0.0 ? 1.0 : 0.0;
+                o.flashStartTime = _UnitData[start + 1u];
 
                 UNITY_TRANSFER_FOG(o, o.vertex);
                 return o;
@@ -89,13 +91,15 @@ Shader "scx/SheepGame/Pet"
                 clip(col.a - _Cutoff);
                 col *= i.color;
 
-                // _Time.y 是 Unity 提供的时间，单位秒
-                // 每秒一轮，强度在 0～1 之间变化
-                float pulse = 0.5 - 0.5 * cos(_Time.y * 6.2831853);
+                // 从该 Unit 的开始时间计算，创建时先显示原色
+                float elapsed = max(0.0, _Time.y - i.flashStartTime);
+
+                // 每秒一轮：原色 → 红色 → 原色
+                float pulse =
+                    0.5 - 0.5 * cos(elapsed * 6.2831853);
 
                 float redAmount = pulse * i.flashEnabled;
 
-                // 只修改 RGB，保留原来的透明度
                 col.rgb = lerp(
                     col.rgb,
                     float3(1.0, 0.0, 0.0),

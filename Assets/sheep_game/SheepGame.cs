@@ -112,6 +112,11 @@ namespace sheep_game {
                     pet.renderHandle.scxSpriteRenderUnit.setVisible(true);
                     pet.renderHandle.lastX = pet.x; // 防止插值瞬移
                     pet.renderHandle.lastY = pet.y; // 防止插值瞬移
+                    
+                    if (pet.flash) {
+                        // 在 shader 中约定 第一位 不为 0 闪烁. 第二位 为闪烁起始时间
+                        pet.renderHandle.scxSpriteRenderUnit.setData(new float[] { 1, Time.timeSinceLevelLoad, 0, 0, 0, 0, 0, 0 });
+                    }
                 }
 
                 renderPet(pet, alpha);
@@ -137,10 +142,6 @@ namespace sheep_game {
 
             pet.renderHandle.scxSpriteRenderUnit.setPosition(renderPosition.x, renderPosition.y, renderPosition.z);
             pet.renderHandle.scxSpriteRenderUnit.setFrame(pet.frame % 10);
-            if (pet.flash) {
-                // 在 shader 中约定 第一位 不为 0 闪烁.
-                pet.renderHandle.scxSpriteRenderUnit.setData(new float[] { 1, 0, 0, 0, 0, 0, 0, 0 });
-            }
         }
 
         // *************************** 测试用 *********************************
