@@ -31,6 +31,9 @@ namespace scx.SpriteRenderer {
         private readonly MeshFilter meshFilter; // 网格渲染器 (Filter)
 
         private readonly Stack<int> freeIndex; // 空闲的 索引
+        
+        private readonly float[] data; // 传递给 shader 的 data, 一个单元 长度为 8
+        private readonly GraphicsBuffer dataBuffer; // 关联的 GPU buffer
 
         public ScxSpriteRenderBatch(int capacity, GameObject parentNode) {
             this.capacity = capacity;
@@ -94,6 +97,24 @@ namespace scx.SpriteRenderer {
             for (var i = 0; i < capacity; i++) {
                 this.freeIndex.Push(i);
             }
+
+            // 每个 Unit 固定 8 个 float
+            this.data = new float[capacity * 8];
+
+            // GPU Buffer
+            this.dataBuffer = new GraphicsBuffer(
+                GraphicsBuffer.Target.Structured,
+                capacity * 8, // float 总数
+                sizeof(float) // 每个元素 4 字节
+            );
+
+            // 上传初始数据
+            this.dataBuffer.SetData(this.data);
+
+            // 绑定到当前 Batch 的 Renderer
+            var propertyBlock = new MaterialPropertyBlock();
+            propertyBlock.SetBuffer("_UnitData", this.dataBuffer);
+            this.meshRenderer.SetPropertyBlock(propertyBlock);
         }
 
         // ********************* GameObject 相关 ***********************
@@ -103,6 +124,8 @@ namespace scx.SpriteRenderer {
         }
 
         public void destroy() {
+            // 销毁 unitDataBuffer
+            this.dataBuffer.Dispose();
             // 销毁 GPU buffer (否则会导致内存泄露)
             UnityEngine.Object.Destroy(this.mesh);
             // 销毁 Node
@@ -116,6 +139,9 @@ namespace scx.SpriteRenderer {
         }
 
         public void release(int index) {
+            // 重置这个 unit 的 data.
+            Array.Clear(this.data, index * 8, 8);
+            // 释放 index
             this.freeIndex.Push(index);
         }
 
@@ -156,6 +182,21 @@ namespace scx.SpriteRenderer {
             this.colors[startIndex + 2] = color;
             this.colors[startIndex + 3] = color;
         }
+        
+        /// 更新 data (data 长度必须为 8)
+        public void setData(int index, float[] data) {
+            // 计算 Unit 在 unitData 数组中的起始位置
+            var startIndex = index * 8;
+            // 这里暂时不做检查 假设 data 是 8 长度数组.
+            this.data[startIndex + 0] = data[0];
+            this.data[startIndex + 1] = data[1];
+            this.data[startIndex + 2] = data[2];
+            this.data[startIndex + 3] = data[3];
+            this.data[startIndex + 4] = data[4];
+            this.data[startIndex + 5] = data[5];
+            this.data[startIndex + 6] = data[6];
+            this.data[startIndex + 7] = data[7];
+        }
 
         /// 更新材质
         public void setMaterial(Material material) {
@@ -171,6 +212,9 @@ namespace scx.SpriteRenderer {
 
             // 更新包围盒
             mesh.RecalculateBounds();
+            
+            // 更新 unitDataBuffer
+            dataBuffer.SetData(this.data);
         }
     }
 }
