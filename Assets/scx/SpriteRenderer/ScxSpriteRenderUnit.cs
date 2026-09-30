@@ -126,6 +126,11 @@ namespace scx.SpriteRenderer {
         public Color32 getColor() {
             return this.color;
         }
+        
+        // Data (data 长度必须为 8)
+        public void setData(float[] data) {
+            this.renderBatch.setData(this.index, data);
+        }
 
         // 可见性
         public void setVisible(bool visible) {

@@ -71,8 +71,12 @@ namespace sheep_game {
             while (tickAccumulator >= tickInterval) {
                 // 记录状态 用于插值
                 foreach (var pet in sheepWorld.pets) {
-                    pet.renderHandle.lastX = pet.x;
-                    pet.renderHandle.lastY = pet.y;
+                    var renderHandle = pet.renderHandle;
+
+                    if (renderHandle != null) {
+                        renderHandle.lastX = pet.x;
+                        renderHandle.lastY = pet.y;
+                    }
                 }
 
                 // 执行 sheepWorld.tick()
@@ -108,6 +112,11 @@ namespace sheep_game {
                     pet.renderHandle.scxSpriteRenderUnit.setVisible(true);
                     pet.renderHandle.lastX = pet.x; // 防止插值瞬移
                     pet.renderHandle.lastY = pet.y; // 防止插值瞬移
+                    
+                    if (pet.flash) {
+                        // 在 shader 中约定 第一位 不为 0 闪烁. 第二位 为闪烁起始时间
+                        pet.renderHandle.scxSpriteRenderUnit.setData(new float[] { 1, Time.timeSinceLevelLoad, 0, 0, 0, 0, 0, 0 });
+                    }
                 }
 
                 renderPet(pet, alpha);
@@ -120,7 +129,7 @@ namespace sheep_game {
         public void renderPet(Pet pet, float alpha) {
             Vector3 renderPosition;
             // 判断是否启用线性插值
-            if (useLerp&&pet.moveIntent.moveMode!=PetMoveMode.TELEPORT) {
+            if (useLerp && pet.moveIntent.moveMode != PetMoveMode.TELEPORT) {
                 renderPosition = Vector3.Lerp(
                     new Vector3(pet.renderHandle.lastX, 0, pet.renderHandle.lastY),
                     new Vector3(pet.x, 0, pet.y),
@@ -139,6 +148,7 @@ namespace sheep_game {
 
 
         private void UpdateTest() {
+            // 通过空格创建的不闪烁
             if (Input.GetKeyDown(KeyCode.Space)) {
                 for (int i = 0; i < 500; i++) {
                     sheepWorld.addPrePet(new Pet() {
@@ -154,6 +164,28 @@ namespace sheep_game {
                         },
                         x = sheepWorld.randomFloat(-50f, 50f),
                         y = sheepWorld.randomFloat(-50f, 50f),
+                        flash = false
+                    });
+                }
+            }
+            
+            // 通过 F 创建的让他 闪烁
+            if (Input.GetKeyDown(KeyCode.F)) {
+                for (int i = 0; i < 500; i++) {
+                    sheepWorld.addPrePet(new Pet() {
+                        id = sheepWorld.getNextPetId(),
+                        moveIntent = new PetMoveIntent() {
+                            moveSpeed = sheepWorld.randomFloat(0.5f, 1f)
+                        },
+                        collideIntent = new PetCollideIntent() {
+                            // collideRadius = 0.5f,
+                            // collideMoveScale = 1,
+                            // collideElasticityScale = 1.3f / 4,
+                            // collideNotMoveNum = 500
+                        },
+                        x = sheepWorld.randomFloat(-50f, 50f),
+                        y = sheepWorld.randomFloat(-50f, 50f),
+                        flash = true
                     });
                 }
             }

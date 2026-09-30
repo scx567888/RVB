@@ -22,6 +22,9 @@
 
         // 渲染器句柄 (逻辑层不应使用此字段)
         public PetRenderHandle renderHandle;
+        
+        // 是否闪光
+        public bool flash = false;
 
         public void action(SheepWorld sheepWorld) {
             // 1, 执行单位自身逻辑, 更新各类意图和逻辑状态
