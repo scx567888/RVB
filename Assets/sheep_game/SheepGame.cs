@@ -133,12 +133,17 @@ namespace sheep_game {
 
             pet.renderHandle.scxSpriteRenderUnit.setPosition(renderPosition.x, renderPosition.y, renderPosition.z);
             pet.renderHandle.scxSpriteRenderUnit.setFrame(pet.frame % 10);
+            if (pet.flash) {
+                // 在 shader 中约定 第一位 不为 0 闪烁.
+                pet.renderHandle.scxSpriteRenderUnit.setData(new float[] { 1, 0, 0, 0, 0, 0, 0, 0 });
+            }
         }
 
         // *************************** 测试用 *********************************
 
 
         private void UpdateTest() {
+            // 通过空格创建的不闪烁
             if (Input.GetKeyDown(KeyCode.Space)) {
                 for (int i = 0; i < 500; i++) {
                     sheepWorld.addPrePet(new Pet() {
@@ -154,6 +159,28 @@ namespace sheep_game {
                         },
                         x = sheepWorld.randomFloat(-50f, 50f),
                         y = sheepWorld.randomFloat(-50f, 50f),
+                        flash = false
+                    });
+                }
+            }
+            
+            // 通过 F 创建的让他 闪烁
+            if (Input.GetKeyDown(KeyCode.F)) {
+                for (int i = 0; i < 500; i++) {
+                    sheepWorld.addPrePet(new Pet() {
+                        id = sheepWorld.getNextPetId(),
+                        moveIntent = new PetMoveIntent() {
+                            moveSpeed = sheepWorld.randomFloat(0.5f, 1f)
+                        },
+                        collideIntent = new PetCollideIntent() {
+                            // collideRadius = 0.5f,
+                            // collideMoveScale = 1,
+                            // collideElasticityScale = 1.3f / 4,
+                            // collideNotMoveNum = 500
+                        },
+                        x = sheepWorld.randomFloat(-50f, 50f),
+                        y = sheepWorld.randomFloat(-50f, 50f),
+                        flash = true
                     });
                 }
             }
