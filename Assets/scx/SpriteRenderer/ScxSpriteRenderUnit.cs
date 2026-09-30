@@ -129,7 +129,7 @@ namespace scx.SpriteRenderer {
         
         // Data (data 长度必须为 8)
         public void setData(float[] data) {
-            this.renderBatch.setUnitData(this.index, data);
+            this.renderBatch.setData(this.index, data);
         }
 
         // 可见性
