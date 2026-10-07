@@ -29,6 +29,31 @@ namespace rvb.scripts {
                     var o = SheepSkillSubCallBullets.getById(s.id);
                     o.tick(sheepMgr, pet);
                 }
+                else if (s.skillType == SheepSkillType.Freeze) {
+                    var o = SheepSkillSubFreeze.getById(s.id);
+                    o.tick(sheepMgr, pet);
+                }
+                else if (s.skillType == SheepSkillType.Destruction) {
+                    var o = SheepSkillSubDestruction.getById(s.id);
+                    o.tick(sheepMgr, pet);
+                }
+                else if (s.skillType == SheepSkillType.Bombard) {
+                    var o = SheepSkillSubBombard.getById(s.id);
+                    o.tick(sheepMgr, pet);
+                }
+                else if (s.skillType == SheepSkillType.Support) {
+                    var o = SheepSkillSubSupport.getById(s.id);
+                    o.tick(sheepMgr, pet);
+                }
+                else if (s.skillType == SheepSkillType.Buff) {
+                    // 攻速翻倍: 进入 Buff 状态, role_logic 会在 buff 帧窗口内把本阵营的
+                    // logic_counts 置为 2 (每逻辑帧跑两次 action)
+                    var o = SheepSkillSubBuff.getById(s.id);
+                    pet.state = SheepRoleState.Buff;
+                    pet.subState = SheepRoleSubState.Buff;
+                    pet.animType = SheepRoleAnimType.Idle;
+                    pet.readySkillId = o.id;
+                }
             }
             else {
                 var fff = sheepMgr.findTar(pet);

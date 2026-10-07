@@ -611,6 +611,12 @@ MonoBehaviour:
   logicToWorldScale: 0.01
   logicHeightToWorldScale: 0.01
   fallbackLogicalAnimationFrames: 30
+  freezeColor: {r: 0.36, g: 0.67, b: 1, a: 1}
+  freezeUltFreezeFrame: 60
+  freezeUltThawFrame: 60
+  freezeUltImmuneFrame: 0
+  iceMageRoleId: 31
+  skillUnitSpawnCount: 2
   blockRender: {fileID: 822570352}
 --- !u!114 &841530571
 MonoBehaviour:

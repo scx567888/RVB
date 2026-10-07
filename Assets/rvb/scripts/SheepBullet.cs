@@ -852,6 +852,66 @@ namespace rvb.scripts {
             minRadiuses = System.Array.Empty<int>()
         };
 
+        // 炮弹 (天降轰炸本体): 从 startZ 垂直落下, 第 18 帧落地结算范围伤害并生成爆炸特效
+        // 落地帧算法: startZ(1200) / (speed(2000) * 0.033) ≈ 18 帧
+        // animId = 1 在 Sheep.unity 的 bulletRenderConfigs 里已配置
+        // ⚠️ atkBet 在当前伤害链路里是死配置 (createBullet 只写 atkVue = 施法者 conf.atk,
+        //    hurtByBullet 直接用 atkVue), 想调威力请改施法者兵种的 atk.
+        public static readonly SheepBullet bullet_113 = new() {
+            id = 113,
+            name = "炮弹",
+            roleType = 7,
+            animId = 1,
+            moveType = 10,
+            startOffsetX = 0,
+            startOffsetY = 0,
+            startOffsetZ = 0,
+            endOffsetZ = 0,
+            curveHigh = 0,
+            atkBet = 1f,
+            scale = 8f,
+            endFrame = 21,
+            moveTimeFrame = 18,
+            atkShapeType = SheepBulletAtkShapeType.Round,
+            speed = 2000,
+            findR = 2,
+            atkR = 700,
+            radius = 0,
+            createBulletID = 16,
+            createBulletFrame = 18,
+            atkFrames = new[] { 18 },
+            maxRadiuses = System.Array.Empty<int>(),
+            minRadiuses = System.Array.Empty<int>()
+        };
+
+        // 自爆兵自爆 (animId = 19 在 Sheep.unity 里已配置, 与 bullet_16 同一套爆炸特效)
+        public static readonly SheepBullet bullet_114 = new() {
+            id = 114,
+            name = "自爆兵自爆",
+            roleType = 1,
+            animId = 19,
+            moveType = 1,
+            startOffsetX = 0,
+            startOffsetY = 0,
+            startOffsetZ = 0,
+            endOffsetZ = 0,
+            curveHigh = 0,
+            atkBet = 1f,
+            scale = 25f,
+            endFrame = 23,
+            moveTimeFrame = 23,
+            atkShapeType = SheepBulletAtkShapeType.Round,
+            speed = 0,
+            findR = 3,
+            atkR = 1100,
+            radius = 0,
+            createBulletID = 0,
+            createBulletFrame = 0,
+            atkFrames = new[] { 1 },
+            maxRadiuses = System.Array.Empty<int>(),
+            minRadiuses = System.Array.Empty<int>()
+        };
+
         public static readonly SheepBullet[] All = {
             bullet_1,
             bullet_2,
@@ -882,6 +942,8 @@ namespace rvb.scripts {
             bullet_110,
             bullet_111,
             bullet_112,
+            bullet_113,
+            bullet_114,
         };
 
         private static readonly Dictionary<int, SheepBullet> Map = BuildMap();

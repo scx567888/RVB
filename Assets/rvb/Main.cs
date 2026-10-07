@@ -47,6 +47,31 @@ namespace rvb {
         [SerializeField] private float logicHeightToWorldScale = 0.01f;
         [SerializeField] private int fallbackLogicalAnimationFrames = 30;
 
+        [Header("Freeze")]
+        // 完全冰冻时的颜色 (shader 会把顶点色乘到贴图上)
+        [SerializeField] private Color freezeColor = new Color(0.36f, 0.67f, 1f, 1f);
+
+        // 冰冻大招 (按 C / V 键直接触发) 的帧数. 30 逻辑帧 = 1 秒
+        // 默认 60 + 60 = 全场冻 4 秒 (前 2 秒完全不可动, 后 2 秒逐渐解冻)
+        [SerializeField] private int freezeUltFreezeFrame = 60;
+        [SerializeField] private int freezeUltThawFrame = 60;
+
+        // 完全恢复后的免疫帧数, 0 表示可以被下一次大招立刻再冻
+        [SerializeField] private int freezeUltImmuneFrame = 0;
+
+        // 冰法师 兵种 id (一次性全场冰冻单位)
+        [SerializeField] private int iceMageRoleId = 31;
+
+        // 技能兵种 id (与 SheepRoleTypeInfos 里的配置对应)
+        private const int ROLE_PAO_JI_SHOU = 32;    // 炮击手: 天降轰炸
+        private const int ROLE_ZI_BAO_BING = 33;    // 自爆兵: 无视碰撞冲到最前方自爆
+        private const int ROLE_JIE_DONG = 34;       // 解冻祭司: 我方全体解冻
+        private const int ROLE_ZHAN_GU_SHOU = 35;   // 战鼓手: 我方攻速翻倍
+        private const int ROLE_HAO_LING_GUAN = 36;  // 号令官: 我方全体技能重置
+
+        // 每次按键生成几个单位
+        [SerializeField] private int skillUnitSpawnCount = 2;
+
         // 按照 [阵营][角色类型] 存储
         private Dictionary<int, ScxSpriteRenderer>[] petSpriteRenderers;
 
@@ -225,6 +250,26 @@ namespace rvb {
 
             var frameIndex = ResolveRoleSpriteFrame(view);
             renderUnit.setFrame(frameIndex);
+
+            ApplyFreezeTint(view, renderUnit);
+        }
+
+        // 冰冻: 按冰冻进度上色. 完全冰冻时最蓝, 随着解冻逐渐恢复为白色.
+        private void ApplyFreezeTint(PetView view, ScxSpriteRenderUnit renderUnit) {
+            float ratio = view.freezeViewRatio;
+
+            if (ratio <= 0f) {
+                // 只在上一帧染过色时才需要还原, 避免每帧给所有单位写颜色
+                if (view.freezeTinted) {
+                    renderUnit.setColor((Color32)Color.white);
+                    view.freezeTinted = false;
+                }
+
+                return;
+            }
+
+            renderUnit.setColor((Color32)Color.Lerp(Color.white, freezeColor, ratio));
+            view.freezeTinted = true;
         }
 
 
@@ -346,6 +391,47 @@ namespace rvb {
                 SpawnArmy(SheepCamp.Blue, 22, 10);
             }
 
+            // F / G: 生成冰法师 (出场即释放全场冰冻, 放完即消耗)
+            if (Input.GetKeyDown(KeyCode.F)) {
+                SpawnArmy(SheepCamp.Red, iceMageRoleId, 10);
+            }
+
+            if (Input.GetKeyDown(KeyCode.G)) {
+                SpawnArmy(SheepCamp.Blue, iceMageRoleId, 10);
+            }
+
+            // C / V: 不出兵, 直接触发红 / 蓝方的全场冰冻大招 (效果演示)
+            if (Input.GetKeyDown(KeyCode.C)) {
+                FreezeEnemyAll(SheepCamp.Red);
+            }
+
+            if (Input.GetKeyDown(KeyCode.V)) {
+                FreezeEnemyAll(SheepCamp.Blue);
+            }
+
+            // 数字键 1~5: 生成技能兵种. 不按 Shift = 红方, 按住 Shift = 蓝方
+            var skillCamp = IsShiftDown() ? SheepCamp.Blue : SheepCamp.Red;
+
+            if (Input.GetKeyDown(KeyCode.Alpha1)) {
+                SpawnArmy(skillCamp, ROLE_PAO_JI_SHOU, skillUnitSpawnCount);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha2)) {
+                SpawnArmy(skillCamp, ROLE_ZI_BAO_BING, skillUnitSpawnCount);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha3)) {
+                SpawnArmy(skillCamp, ROLE_JIE_DONG, skillUnitSpawnCount);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha4)) {
+                SpawnArmy(skillCamp, ROLE_ZHAN_GU_SHOU, skillUnitSpawnCount);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha5)) {
+                SpawnArmy(skillCamp, ROLE_HAO_LING_GUAN, skillUnitSpawnCount);
+            }
+
             // if (Input.GetKeyDown(KeyCode.H) && highlightMaterial != null) {
             // scxSpriteRenderer.setMaterialTemplate(highlightMaterial);
             // }
@@ -353,6 +439,23 @@ namespace rvb {
             // if (Input.GetKeyDown(KeyCode.M) && mainMaterial != null) {
             // scxSpriteRenderer.setMaterialTemplate(mainMaterial);
             // }
+        }
+
+        private static bool IsShiftDown() {
+            return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        }
+
+        private void FreezeEnemyAll(SheepCamp camp) {
+            if (sheepMgr == null) {
+                return;
+            }
+
+            sheepMgr.freezeEnemyAll(
+                camp,
+                freezeUltFreezeFrame,
+                freezeUltThawFrame,
+                freezeUltImmuneFrame
+            );
         }
 
         private void SpawnArmy(SheepCamp camp, int roleId, int count) {

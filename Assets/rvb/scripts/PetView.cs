@@ -57,6 +57,32 @@ namespace rvb.scripts {
         public int readySkillId = 0;
         public int energy = 0;
 
+        // ******************** 冰冻 (Freeze) 相关 ********************
+
+        // 剩余 完全冰冻 帧数 (期间完全静止)
+        public int freezeFrame = 0;
+
+        // 剩余 解冻 帧数 (期间行动能力线性恢复)
+        public int thawFrame = 0;
+
+        // 解冻 总帧数 (用于计算解冻进度)
+        public int thawTotalFrame = 0;
+
+        // 完全恢复之后的 冰冻免疫 剩余帧数 (防止被无限连冻)
+        public int freezeImmuneFrame = 0;
+
+        // 待生效的免疫帧数, 在解冻完成的那一帧写入 freezeImmuneFrame
+        private int pendingFreezeImmuneFrame = 0;
+
+        // 本次冰冻施法是否已经生效 (施法者使用)
+        public bool freezeCasted = false;
+
+        // 本次施法已经进行的波次 (轰炸用来数投弹波次; 自爆 / 支援用来保证只生效一次)
+        public int castWaveCnt = 0;
+
+        // 渲染层使用: 当前是否处于 "被染成冰色" 的状态, 避免每帧重复写入颜色
+        public bool freezeTinted = false;
+
         public BuffTimeAttacher attacher;
 
         // 渲染器句柄
@@ -72,6 +98,123 @@ namespace rvb.scripts {
             set {
                 _animType = value;
                 animFrame = 0;
+                animFrameAcc = 0f;
+            }
+        }
+
+        // 是否处于 完全冰冻 (不能行动)
+        public bool isFrozen => freezeFrame > 0;
+
+        // 是否处于 解冻过程中
+        public bool isThawing => freezeFrame <= 0 && thawFrame > 0;
+
+        /// 行动速率: 0 (完全冰冻) ~ 1 (正常).
+        /// 解冻过程中线性恢复, 用于缩放 移动速度 / 攻击 cd / 动画播放速度.
+        public float freezeActionScale {
+            get {
+                // 死亡后不再受冰冻影响: 否则 updateAnimFrame() 拿到 0 会让死亡动画卡住,
+                // role_logic 里 "animFrame >= 动画总帧数 - 1" 的回收条件永远不成立, 尸体留在场上.
+                if (isDie) {
+                    return 1f;
+                }
+
+                if (freezeFrame > 0) {
+                    return 0f;
+                }
+
+                if (thawFrame <= 0 || thawTotalFrame <= 0) {
+                    return 1f;
+                }
+
+                return 1f - (float)thawFrame / thawTotalFrame;
+            }
+        }
+
+        /// 冰冻视觉强度: 1 (完全冰冻) ~ 0 (完全解冻). 渲染层据此上色.
+        public float freezeViewRatio {
+            get {
+                if (freezeFrame > 0) {
+                    return 1f;
+                }
+
+                if (thawFrame <= 0 || thawTotalFrame <= 0) {
+                    return 0f;
+                }
+
+                return (float)thawFrame / thawTotalFrame;
+            }
+        }
+
+        /// 施加冰冻. 返回 是否成功施加.
+        /// freezeFrames 完全冰冻帧数, thawFrames 解冻帧数, immuneFrames 解冻后的额外免疫帧数.
+        public bool applyFreeze(int freezeFrames, int thawFrames, int immuneFrames) {
+            // 死亡单位 / BOSS 免疫
+            if (isDie || curHp <= 0) {
+                return false;
+            }
+
+            if (conf == null || conf.roleType == SheepRoleType.BOSS) {
+                return false;
+            }
+
+            // 只有"完全恢复后的免疫期"内才拒绝.
+            // 还在冰冻/解冻中时允许被下一次大招刷新 (取较大值), 不会出现大招打空的情况.
+            if (freezeImmuneFrame > 0) {
+                return false;
+            }
+
+            // 取较大值, 避免短时间冰冻覆盖掉长时间冰冻
+            if (freezeFrames > freezeFrame) {
+                freezeFrame = freezeFrames;
+            }
+
+            if (thawFrames > thawFrame) {
+                thawFrame = thawFrames;
+                thawTotalFrame = thawFrames;
+            }
+
+            // 免疫从"完全解冻"那一刻才开始计时
+            if (immuneFrames > pendingFreezeImmuneFrame) {
+                pendingFreezeImmuneFrame = immuneFrames;
+            }
+
+            // 冻住的单位不会被击退
+            impulseX = 0;
+            impulseY = 0;
+
+            return true;
+        }
+
+        /// 立即清除冰冻状态 (驱散用). 不清除已经生效的免疫.
+        public void clearFreeze() {
+            freezeFrame = 0;
+            thawFrame = 0;
+            thawTotalFrame = 0;
+            pendingFreezeImmuneFrame = 0;
+        }
+
+        /// 推进冰冻计时. 由 SheepMgr.role_logic 每 "逻辑帧" 调用一次.
+        /// 注意: 不能放在 action() 里 —— action() 会按 logic_counts 每逻辑帧跑 1~2 次
+        /// (攻速翻倍 buff 生效时为 2), 那样带 buff 的一方会提前一半时间解冻.
+        /// 冰冻是控制效果, 时长应该是真实时间, 不被目标自身的加速影响.
+        public void updateFreezeTimer() {
+            if (freezeImmuneFrame > 0) {
+                freezeImmuneFrame -= 1;
+            }
+
+            if (freezeFrame > 0) {
+                freezeFrame -= 1;
+                return;
+            }
+
+            if (thawFrame > 0) {
+                thawFrame -= 1;
+                if (thawFrame == 0) {
+                    thawTotalFrame = 0;
+                    // 完全恢复, 免疫期开始
+                    freezeImmuneFrame = pendingFreezeImmuneFrame;
+                    pendingFreezeImmuneFrame = 0;
+                }
             }
         }
 
@@ -113,7 +256,18 @@ namespace rvb.scripts {
         }
 
         public virtual void action(SheepMgr sheepMgr, float fixedDeltaTime) {
-           
+            // 冰冻: 完全冰冻期间不行动 (计时由 SheepMgr.role_logic 按逻辑帧推进)
+            if (this.isFrozen && !this.isDie) {
+                // 完全冰冻: 钉在原地, 不跑状态机, 不推进动画帧和逻辑帧
+                this.posBefX = this.posX;
+                this.posBefY = this.posY;
+                this.animX = this.posX;
+                this.animY = this.posY;
+                this.impulseX = 0;
+                this.impulseY = 0;
+                return;
+            }
+
             var bbb = this.update_frame(sheepMgr);
             var petIsDie = this.isDie;
             if (!petIsDie) {
@@ -148,7 +302,9 @@ namespace rvb.scripts {
         }
         
         private void update_role_state(bool isLogicFrame, SheepMgr sheepMgr, float fixedDeltaTime) {
-            this.subAtkCd(fixedDeltaTime);
+            // 解冻过程中 攻击 cd 恢复也会变慢
+            var actionScale = this.freezeActionScale;
+            this.subAtkCd(actionScale >= 1f ? fixedDeltaTime : fixedDeltaTime * actionScale);
 
             PetLogic petLogic;
             switch (state) {
@@ -200,6 +356,18 @@ namespace rvb.scripts {
                 case SheepRoleState.Rigidity:
                     petLogic = PetLogicRigidity.Instance;
                     break;
+                case SheepRoleState.Freeze:
+                    petLogic = PetLogicFreeze.Instance;
+                    break;
+                case SheepRoleState.Destruction:
+                    petLogic = PetLogicDestruction.Instance;
+                    break;
+                case SheepRoleState.Bombard:
+                    petLogic = PetLogicBombard.Instance;
+                    break;
+                case SheepRoleState.Support:
+                    petLogic = PetLogicSupport.Instance;
+                    break;
                 case SheepRoleState.SpinAtk:
                     petLogic = PetLogicSpinAtk.Instance;
                     break;
@@ -237,9 +405,25 @@ namespace rvb.scripts {
         }    
         
         
+        // 动画帧累加器 (解冻过程中动画播放速度小于 1 时使用)
+        private float animFrameAcc = 0f;
+
         // 每逻辑帧调用一次
         public void updateAnimFrame() {
-            animFrame += 1;
+            // 注意: freezeActionScale 在 isDie 时固定返回 1, 所以死亡动画永远按正常速度播放
+            var actionScale = this.freezeActionScale;
+
+            if (actionScale >= 1f) {
+                animFrame += 1;
+                return;
+            }
+
+            // 解冻过程中 动画逐渐变快
+            animFrameAcc += actionScale;
+            if (animFrameAcc >= 1f) {
+                animFrameAcc -= 1f;
+                animFrame += 1;
+            }
         }
         
     }

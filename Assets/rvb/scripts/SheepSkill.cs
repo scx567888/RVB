@@ -299,6 +299,41 @@ namespace rvb.scripts {
             skillType = SheepSkillType.ChargePlus
         };
 
+        // 全场冰冻 (寒冰菇式大招)
+        public static readonly SheepSkill skill_170001 = new() {
+            id = 170001,
+            name = "全场冰冻",
+            skillType = SheepSkillType.Freeze
+        };
+
+        // 自爆兵自爆
+        public static readonly SheepSkill skill_120002 = new() {
+            id = 120002,
+            name = "自爆兵自爆",
+            skillType = SheepSkillType.Destruction
+        };
+
+        // 炮火覆盖 (天降轰炸)
+        public static readonly SheepSkill skill_180001 = new() {
+            id = 180001,
+            name = "炮火覆盖",
+            skillType = SheepSkillType.Bombard
+        };
+
+        // 寒冰消融 (全体解冻)
+        public static readonly SheepSkill skill_190001 = new() {
+            id = 190001,
+            name = "寒冰消融",
+            skillType = SheepSkillType.Support
+        };
+
+        // 全军号令 (全体技能重置)
+        public static readonly SheepSkill skill_190002 = new() {
+            id = 190002,
+            name = "全军号令",
+            skillType = SheepSkillType.Support
+        };
+
         public static readonly SheepSkill[] All = {
             skill_10000,
             skill_10001,
@@ -340,6 +375,11 @@ namespace rvb.scripts {
             skill_140001,
             skill_150001,
             skill_160001,
+            skill_170001,
+            skill_120002,
+            skill_180001,
+            skill_190001,
+            skill_190002,
         };
 
         private static readonly Dictionary<int, SheepSkill> Map = BuildMap();
