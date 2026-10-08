@@ -32,7 +32,7 @@ namespace rvb.scripts {
         public int waveCnt;
 
         // 炮弹 id (SheepBullet)
-        public int bulletId;
+        public int[] bulletId;
 
         // 炮弹起始高度
         public int startZ;
@@ -103,7 +103,7 @@ namespace rvb.scripts {
             frameStep = 4,
             frameCnt = 3,
             waveCnt = 8,
-            bulletId = 113,
+            bulletId = new[]{113,115},
             startZ = 1200,
             scatterR = 900,
             endFrame = 37,

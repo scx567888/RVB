@@ -861,7 +861,34 @@ namespace rvb.scripts {
             id = 113,
             name = "炮弹",
             roleType = 7,
-            animId = 1,
+            animId = 3,
+            moveType = 10,
+            startOffsetX = 0,
+            startOffsetY = 0,
+            startOffsetZ = 0,
+            endOffsetZ = 0,
+            curveHigh = 0,
+            atkBet = 1f,
+            scale = 8f,
+            endFrame = 21,
+            moveTimeFrame = 18,
+            atkShapeType = SheepBulletAtkShapeType.Round,
+            speed = 2000,
+            findR = 2,
+            atkR = 700,
+            radius = 0,
+            createBulletID = 16,
+            createBulletFrame = 18,
+            atkFrames = new[] { 18 },
+            maxRadiuses = System.Array.Empty<int>(),
+            minRadiuses = System.Array.Empty<int>()
+        };
+        
+        public static readonly SheepBullet bullet_115 = new() {
+            id = 115,
+            name = "炮弹",
+            roleType = 7,
+            animId = 18,
             moveType = 10,
             startOffsetX = 0,
             startOffsetY = 0,
@@ -944,6 +971,7 @@ namespace rvb.scripts {
             bullet_112,
             bullet_113,
             bullet_114,
+            bullet_115,
         };
 
         private static readonly Dictionary<int, SheepBullet> Map = BuildMap();

@@ -25,7 +25,7 @@ namespace rvb.scripts {
                 var nextWaveFrame = conf.startFrame + pet.castWaveCnt * conf.frameStep;
                 if (animFrame >= nextWaveFrame) {
                     pet.castWaveCnt += 1;
-                    sheepMgr.dropBombs(pet, conf.bulletId, conf.frameCnt, conf.startZ, conf.scatterR);
+                    sheepMgr.dropBombs(pet, conf.bulletId[(int)pet.camp], conf.frameCnt, conf.startZ, conf.scatterR);
                 }
             }
 
