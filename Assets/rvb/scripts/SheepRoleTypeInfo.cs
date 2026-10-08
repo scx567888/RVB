@@ -38,9 +38,6 @@ namespace rvb.scripts {
         public bool isSpurtAnim;
         public int skillSpurt;
         public int skillIn;
-
-        // 是否无视碰撞 (出场时置 PetView.isNotConn, 自己不被挡, 也不挡别人)
-        public bool isNotCollide;
         
         public int[] bullet = Array.Empty<int>();
 
@@ -1305,7 +1302,6 @@ namespace rvb.scripts {
             isSpurtAnim = false,
             skillSpurt = 180001,
             skillIn = 0,
-            isNotCollide = false,
             hp = 6000f,
             atk = 900,
             findR = 7,
@@ -1344,7 +1340,7 @@ namespace rvb.scripts {
         public static readonly SheepRoleTypeInfo ZI_BAO_BING = new() {
             id = 33,
             roleType = SheepRoleType.CHONG_FENG_BING,
-            collideGroup = SheepCollideGroup.GROUP4,
+            collideGroup = SheepCollideGroup.GROUP9,
             animId = 104,
             scale = 5f,
             detectCollideR = 2,
@@ -1357,8 +1353,6 @@ namespace rvb.scripts {
             isSpurtAnim = true,
             skillSpurt = 120002,
             skillIn = 0,
-            // 关键: 无视碰撞, 才能径直穿过人群冲到最前方
-            isNotCollide = true,
             hp = 1500f,
             atk = 600,
             findR = 2,
@@ -1409,7 +1403,6 @@ namespace rvb.scripts {
             isSpurtAnim = false,
             skillSpurt = 190001,
             skillIn = 0,
-            isNotCollide = false,
             hp = 3000f,
             atk = 100,
             findR = 3,
@@ -1458,7 +1451,6 @@ namespace rvb.scripts {
             isSpurtAnim = false,
             skillSpurt = 90001,
             skillIn = 0,
-            isNotCollide = false,
             hp = 2000f,
             atk = 30,
             findR = 1,
@@ -1512,7 +1504,6 @@ namespace rvb.scripts {
             isSpurtAnim = false,
             skillSpurt = 190002,
             skillIn = 0,
-            isNotCollide = false,
             hp = 8000f,
             atk = 500,
             findR = 3,

@@ -1191,11 +1191,6 @@ namespace rvb.scripts {
             pet.curHp = pet.conf.hp;
             pet.curAtkBuff = 0;
 
-            // 无视碰撞 (自爆兵这类需要径直穿过人群的单位)
-            if (pet.conf.isNotCollide) {
-                pet.isNotConn = true;
-            }
-
             if (pet.isBoom) {
                 pet.isNotConn = true;
                 pet.isBoom = true;
