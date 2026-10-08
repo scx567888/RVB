@@ -903,7 +903,7 @@ namespace rvb.scripts {
             atkShapeType = SheepBulletAtkShapeType.Round,
             speed = 0,
             findR = 3,
-            atkR = 1100,
+            atkR = 1700,
             radius = 0,
             createBulletID = 0,
             createBulletFrame = 0,
