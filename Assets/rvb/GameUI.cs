@@ -13,7 +13,7 @@ public class GameUI : MonoBehaviour
     private VisualElement bluePanel;
     private Label redHP;
     private Label blueHP;
-    
+
     private SheepMgr sheepMgr;
 
     void OnEnable()
@@ -88,9 +88,9 @@ public class GameUI : MonoBehaviour
         {
             return;
         }
-        
-        var redHPText=$"HP: {sheepMgr.bosses[0].curHp}";
-        var blueHPText=$"{sheepMgr.bosses[1].curHp} :HP";
+
+        var redHPText = $"HP: {sheepMgr.bosses[0].curHp}";
+        var blueHPText = $"{sheepMgr.bosses[1].curHp} :HP";
         redHP.text = redHPText;
         blueHP.text = blueHPText;
     }
