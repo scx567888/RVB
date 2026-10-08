@@ -47,7 +47,6 @@ namespace rvb {
         [SerializeField] private float logicHeightToWorldScale = 0.01f;
         [SerializeField] private int fallbackLogicalAnimationFrames = 30;
 
-        [Header("Freeze")]
         // 完全冰冻时的颜色 (shader 会把顶点色乘到贴图上)
         [SerializeField] private Color freezeColor = new Color(0.36f, 0.67f, 1f, 1f);
 
