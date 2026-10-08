@@ -2,6 +2,12 @@
     <Style
         src="project://database/Assets/rvb/GameUI.uss?fileID=7433441132597879392&amp;guid=93e0a0fbbfec44bf91f027bfb7c7b88d&amp;type=3#GameUI" />
     <ui:VisualElement name="game-ui">
+        
+        <ui:VisualElement name="info-panel">
+            <ui:Label name="red-hp" text="HP: --" />
+            <ui:Label name="blue-hp" text="-- :HP" />
+        </ui:VisualElement>
+        
         <ui:VisualElement name="red-panel">
             <ui:Button class="red-button" text="测试测试测试1" />
             <ui:Button class="red-button" text="测试测试测试2" />
@@ -40,5 +46,9 @@
             <ui:Button class="blue-button" text="测试测试测试16" />
             <ui:Button class="blue-button" text="测试测试测试17" />
         </ui:VisualElement>
+        
+        
+        
+        
     </ui:VisualElement>
 </ui:UXML>

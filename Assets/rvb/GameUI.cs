@@ -3,12 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using rvb.scripts;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.UIElements;
+using Button = UnityEngine.UIElements.Button;
 
 public class GameUI : MonoBehaviour
 {
     private VisualElement redPanel;
     private VisualElement bluePanel;
+    private Label redHP;
+    private Label blueHP;
+    
+    private SheepMgr sheepMgr;
 
     void OnEnable()
     {
@@ -17,6 +23,8 @@ public class GameUI : MonoBehaviour
 
         redPanel = root.Q<VisualElement>("red-panel");
         bluePanel = root.Q<VisualElement>("blue-panel");
+        redHP = root.Q<Label>("red-hp");
+        blueHP = root.Q<Label>("blue-hp");
     }
 
     private IEnumerator Start()
@@ -31,7 +39,7 @@ public class GameUI : MonoBehaviour
             yield return null;
         }
 
-        var sheepMgr = SheepMgr.inc;
+        sheepMgr = SheepMgr.inc;
 
         // 创建兵种生成按钮
         foreach (var roleIdValue in SheepRoleTypeInfos.All)
@@ -72,6 +80,19 @@ public class GameUI : MonoBehaviour
                 }
             );
         }
+    }
+
+    private void Update()
+    {
+        if (sheepMgr == null || sheepMgr.bosses == null)
+        {
+            return;
+        }
+        
+        var redHPText=$"HP: {sheepMgr.bosses[0].curHp}";
+        var blueHPText=$"{sheepMgr.bosses[1].curHp} :HP";
+        redHP.text = redHPText;
+        blueHP.text = blueHPText;
     }
 
     public Button addRedButton(string title, Action callback)
