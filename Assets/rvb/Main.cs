@@ -47,6 +47,9 @@ namespace rvb {
         [SerializeField] private float logicHeightToWorldScale = 0.01f;
         [SerializeField] private int fallbackLogicalAnimationFrames = 30;
 
+        // 完全冰冻时的颜色 (shader 会把顶点色乘到贴图上)
+        [SerializeField] private Color freezeColor = new Color(0.36f, 0.67f, 1f, 1f);
+
         // 按照 [阵营][角色类型] 存储
         private Dictionary<int, ScxSpriteRenderer>[] petSpriteRenderers;
 
@@ -190,8 +193,6 @@ namespace rvb {
                 SyncBulletView(sheepMgrPet);
             }
 
-            RecycleMissingRoleRenderers();
-            RecycleMissingBulletRenderers();
         }
 
         private void SyncBossMarker(int poolIndex) {
@@ -225,6 +226,26 @@ namespace rvb {
 
             var frameIndex = ResolveRoleSpriteFrame(view);
             renderUnit.setFrame(frameIndex);
+
+            ApplyFreezeTint(view, renderUnit);
+        }
+
+        // 冰冻: 按冰冻进度上色. 完全冰冻时最蓝, 随着解冻逐渐恢复为白色.
+        private void ApplyFreezeTint(PetView view, ScxSpriteRenderUnit renderUnit) {
+            float ratio = view.freezeViewRatio;
+
+            if (ratio <= 0f) {
+                // 只在上一帧染过色时才需要还原, 避免每帧给所有单位写颜色
+                if (view.freezeTinted) {
+                    renderUnit.setColor((Color32)Color.white);
+                    view.freezeTinted = false;
+                }
+
+                return;
+            }
+
+            renderUnit.setColor((Color32)Color.Lerp(Color.white, freezeColor, ratio));
+            view.freezeTinted = true;
         }
 
 
@@ -301,49 +322,10 @@ namespace rvb {
             return result < 0 ? result + modulo : result;
         }
 
-        private void RecycleMissingRoleRenderers() {
-            // staleRoleSlots.Clear();
-
-            // foreach (KeyValuePair<string, ScxSpriteRenderUnit> pair in roleRenderers) {
-            // if (!seenRoleSlots.Contains(pair.Key)) {
-            // staleRoleSlots.Add(pair.Key);
-            // }
-            // }
-
-            // foreach (var slot in staleRoleSlots) {
-            // var renderPet = roleRenderers[slot];
-            // roleRenderers.Remove(slot);
-            // renderPet.destroy();
-            // }
-        }
-
-        private void RecycleMissingBulletRenderers() {
-            // staleBulletIds.Clear();
-            //
-            // foreach (KeyValuePair<int, ScxSpriteRenderUnit> pair in bulletRenderers) {
-            //     if (!seenBulletIds.Contains(pair.Key)) {
-            //         staleBulletIds.Add(pair.Key);
-            //     }
-            // }
-            //
-            // foreach (int id in staleBulletIds) {
-            //     var renderPet = bulletRenderers[id];
-            //     bulletRenderers.Remove(id);
-            //     renderPet.destroy();
-            // }
-        }
 
         private void UpdateHotkeys() {
             if (Input.GetKeyDown(KeyCode.Space)) {
                 StartBattle();
-            }
-
-            if (Input.GetKeyDown(KeyCode.R)) {
-                SpawnArmy(SheepCamp.Red, 22, 10);
-            }
-
-            if (Input.GetKeyDown(KeyCode.B)) {
-                SpawnArmy(SheepCamp.Blue, 22, 10);
             }
 
             // if (Input.GetKeyDown(KeyCode.H) && highlightMaterial != null) {
@@ -354,13 +336,6 @@ namespace rvb {
             // scxSpriteRenderer.setMaterialTemplate(mainMaterial);
             // }
         }
-
-        private void SpawnArmy(SheepCamp camp, int roleId, int count) {
-            if (sheepMgr == null || count <= 0) {
-                return;
-            }
-
-            sheepMgr.produce_pets(roleId, count, camp);
-        }
+       
     }
 }

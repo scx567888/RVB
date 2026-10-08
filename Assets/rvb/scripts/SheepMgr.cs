@@ -687,6 +687,9 @@ namespace rvb.scripts {
 
 
             foreach (var y in this.pets) {
+                // 冰冻计时按逻辑帧推进, 不受 logic_counts 的加速影响
+                y.updateFreezeTimer();
+
                 updateSkinPet(y, sheepCtl, this, this, dt);
 
 
@@ -728,7 +731,11 @@ namespace rvb.scripts {
                 else if (A == SheepRoleState.Buff) {
                     var V = SheepSkillSubBuff.getById(D.readySkillId);
                     var U = D.animFrame;
-                    if (U > V.buffStratFrame && U < V.buffEndFrame) {
+                    // 被冰冻的单位 action() 直接返回, animFrame 不推进, 会把自己卡在 buff
+                    // 帧窗口里导致 buff 无限延长. 冰冻期间不提供 buff.
+                    if (D.isFrozen) {
+                    }
+                    else if (U > V.buffStratFrame && U < V.buffEndFrame) {
                         if (y.camp == SheepCamp.Blue) {
                             _blueBuffCount += 1;
                         }
@@ -1725,6 +1732,12 @@ namespace rvb.scripts {
                 n = e.conf.walkSpeed;
             }
 
+            // 冰冻: 解冻过程中 移动速度逐渐恢复 (完全冰冻时不会走到这里)
+            var freezeScale = e.freezeActionScale;
+            if (freezeScale < 1f) {
+                n *= freezeScale;
+            }
+
             // 计算不考虑碰撞的情况下 应该移动的向量
             Vector2 r = new Vector2((float)(e.dirX * n * i), (float)(e.dirY * n * i));
 
@@ -2025,6 +2038,267 @@ namespace rvb.scripts {
                     }
                 }
             });
+        }
+
+        /// 场上是否还有 camp 的敌方单位 (存活且未死亡)
+        public bool hasEnemyPet(SheepCamp camp) {
+            var enemyCamp = camp == SheepCamp.Red ? SheepCamp.Blue : SheepCamp.Red;
+
+            foreach (var pet in pets) {
+                if (pet.camp == enemyCamp && !pet.isDie && pet.curHp > 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// e 附近 findR 格之内是否有可攻击的敌方单位
+        public bool hasEnemyNear(PetView e, int findR) {
+            if (findR <= 0) {
+                return false;
+            }
+
+            (int xn, int yn) block = getXnYn(e.posX, e.posY);
+
+            var found = false;
+
+            forfeachBlocksByAckView(e.camp, block.xn, block.yn, findR, target => {
+                if (found || target.isDie || target.curHp <= 0) {
+                    return;
+                }
+
+                found = true;
+            });
+
+            return found;
+        }
+
+        /// 随机抽一个 camp 的敌方存活单位的位置 (蓄水池抽样, 不分配内存, 走 logicRandom 保证可复现).
+        /// 返回 是否抽到.
+        public bool tryPickRandomEnemyPos(SheepCamp camp, out float x, out float y) {
+            var enemyCamp = camp == SheepCamp.Red ? SheepCamp.Blue : SheepCamp.Red;
+
+            x = 0f;
+            y = 0f;
+
+            var seen = 0;
+
+            foreach (var pet in pets) {
+                if (pet.camp != enemyCamp || pet.isDie || pet.curHp <= 0) {
+                    continue;
+                }
+
+                seen += 1;
+
+                // 蓄水池抽样 (k = 1): 第 seen 个元素以 1/seen 的概率成为当前被抽中的
+                if (RandomInt(0, seen) == 0) {
+                    x = pet.posX;
+                    y = pet.posY;
+                }
+            }
+
+            return seen > 0;
+        }
+
+        /// 天降轰炸: 随机抽一个敌方单位作为落点中心, 在 scatterR 半径内投下 cnt 发炮弹.
+        /// 炮弹从 startZ 高度垂直落下, 落地伤害与爆炸特效由 SheepBullet 配置驱动.
+        /// 返回 实际投下的炮弹数 (场上没有敌人时为 0, 不浪费弹药)
+        public int dropBombs(PetView caster, int bulletId, int cnt, int startZ, int scatterR) {
+            if (cnt <= 0) {
+                return 0;
+            }
+
+            if (!tryPickRandomEnemyPos(caster.camp, out var centerX, out var centerY)) {
+                return 0;
+            }
+
+            for (var i = 0; i < cnt; i++) {
+                // 在以 (centerX, centerY) 为圆心、scatterR 为半径的圆内随机取落点
+                var angle = RandomFloat(0f, 2f * Mathf.PI);
+                var r = scatterR * Mathf.Sqrt(Random01());
+                var landX = centerX + r * Mathf.Cos(angle);
+                var landY = centerY + r * Mathf.Sin(angle);
+
+                createBullet(new BullteCreate() {
+                    view_pet = caster,
+                    bulletId = bulletId,
+                    info = new BullteCreate.Info() {
+                        startX = landX,
+                        startY = landY,
+                        startZ = startZ,
+                        endX = landX,
+                        endY = landY,
+                        endZ = 0,
+                        // 必须显式给方向, 否则 createBullet 会用 (end - start) 归一化,
+                        // 而垂直落下时水平分量为 0 会出现除零.
+                        dirX = 0,
+                        dirY = 0,
+                        dirZ = -1
+                    }
+                });
+            }
+
+            return cnt;
+        }
+
+        /// 全体解冻: 清除 camp 我方全部单位的冰冻/解冻状态, 立刻恢复战斗.
+        /// 返回 实际解冻的单位数量
+        public int unfreezeAlly(SheepCamp camp) {
+            var count = 0;
+
+            foreach (var pet in pets) {
+                if (pet.camp != camp || pet.isDie) {
+                    continue;
+                }
+
+                if (!pet.isFrozen && !pet.isThawing) {
+                    continue;
+                }
+
+                pet.clearFreeze();
+                count += 1;
+            }
+
+            return count;
+        }
+
+        /// 全体技能重置: 让 camp 我方单位重新回到出场 (Spurt) 状态, 从而再放一次自己的出场技能.
+        /// caster 是施法者本人, 会被跳过.
+        /// 返回 实际重置的单位数量
+        public int resetAllySkill(SheepCamp camp, PetView caster) {
+            var count = 0;
+
+            foreach (var pet in pets) {
+                if (pet.camp != camp) {
+                    continue;
+                }
+
+                // 跳过施法者自己, 防止自我重置造成循环
+                if (pet == caster) {
+                    continue;
+                }
+
+                if (!canResetSkill(pet)) {
+                    continue;
+                }
+
+                enterSpurtState(pet);
+                count += 1;
+            }
+
+            return count;
+        }
+
+        /// 判断一个单位能否被"技能重置"影响.
+        /// 这里刻意收得很窄, 只重置处于普通战斗状态的单位, 避免打断带有配对状态的技能
+        /// (例如 Killer 处决会同时操作目标单位) 而产生跨技能的 bug.
+        private static bool canResetSkill(PetView pet) {
+            // 死亡 / 将死
+            if (pet.isDie || pet.curHp <= 0) {
+                return false;
+            }
+
+            // 没有出场技能, 没什么可重置
+            if (pet.conf.skillSpurt == 0) {
+                return false;
+            }
+
+            // 被冰冻/解冻中的单位无法行动, 重置只会浪费效果
+            if (pet.isFrozen || pet.isThawing) {
+                return false;
+            }
+
+            // 正在被其它技能锁定
+            if (pet.isLock) {
+                return false;
+            }
+
+            // 只重置普通战斗状态, 不打断正在进行的技能
+            if (pet.state != SheepRoleState.Move &&
+                pet.state != SheepRoleState.Attack &&
+                pet.state != SheepRoleState.Spurt) {
+                return false;
+            }
+
+            // 出场技能本身就是"全局支援"类的, 跳过, 否则两个支援单位会互相重置
+            var skill = SheepSkill.getById(pet.conf.skillSpurt);
+            if (skill == null || skill.skillType == SheepSkillType.Support) {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// 把单位放回"出场冲刺"状态. 与 PetLogicStart 切换到冲刺时的处理保持一致.
+        public static void enterSpurtState(PetView pet) {
+            var skill = SheepSkill.getById(pet.conf.skillSpurt);
+
+            if (skill != null && skill.skillType == SheepSkillType.Charge) {
+                pet.state = SheepRoleState.Charge;
+                pet.subState = SheepRoleSubState.Spurt;
+                pet.animType = SheepRoleAnimType.Spurt;
+                return;
+            }
+
+            if (skill != null && skill.skillType == SheepSkillType.SpinSpurt) {
+                pet.state = SheepRoleState.SpinSpurt;
+                pet.animType = SheepRoleAnimType.Attack;
+                return;
+            }
+
+            pet.state = SheepRoleState.Spurt;
+            pet.subState = SheepRoleSubState.Spurt;
+            pet.animType = pet.conf.isSpurtAnim ? SheepRoleAnimType.Spurt : SheepRoleAnimType.Idle;
+        }
+
+        /// 全局冰冻 (寒冰菇式大招): 冰冻 camp 的敌方 "全部" 单位, 不受距离限制.
+        /// camp        施法方阵营 (冰冻的是它的敌方)
+        /// freezeFrame 完全冰冻帧数 (期间完全不可动)
+        /// thawFrame   解冻帧数 (期间行动能力从 0 线性恢复到 1)
+        /// immuneFrame 完全恢复后的免疫帧数 (0 表示可以被下一次大招立刻再冻)
+        /// caster      施法者, 为 null 时不结算伤害 (调试热键用)
+        /// atkBet      附带伤害倍率 (0 表示纯控制)
+        /// 返回 实际被冰冻的单位数量
+        public int freezeEnemyAll(
+            SheepCamp camp,
+            int freezeFrame,
+            int thawFrame,
+            int immuneFrame,
+            PetView caster = null,
+            float atkBet = 0f
+        ) {
+            var enemyCamp = camp == SheepCamp.Red ? SheepCamp.Blue : SheepCamp.Red;
+
+            // 伤害只在有施法者且倍率不为 0 时结算
+            var hasDamage = caster != null && atkBet != 0f;
+            float atk = 0f;
+            if (hasDamage) {
+                atk = atkBet * caster.conf.atk;
+                if (caster.curAtkBuff != 0f) {
+                    atk = Mathf.Floor(atk * (1f + caster.curAtkBuff / 100f));
+                }
+            }
+
+            int count = 0;
+
+            foreach (var pet in pets) {
+                if (pet.camp != enemyCamp) {
+                    continue;
+                }
+
+                if (!pet.applyFreeze(freezeFrame, thawFrame, immuneFrame)) {
+                    continue;
+                }
+
+                count += 1;
+
+                if (hasDamage) {
+                    hurtByRole(caster, pet, atk);
+                }
+            }
+
+            return count;
         }
 
         public static void hurtByRole(PetView e, PetView t, float i) {

@@ -1,0 +1,54 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style
+        src="project://database/Assets/rvb/GameUI.uss?fileID=7433441132597879392&amp;guid=93e0a0fbbfec44bf91f027bfb7c7b88d&amp;type=3#GameUI" />
+    <ui:VisualElement name="game-ui">
+        
+        <ui:VisualElement name="info-panel">
+            <ui:Label name="red-hp" text="HP: --" />
+            <ui:Label name="blue-hp" text="-- :HP" />
+        </ui:VisualElement>
+        
+        <ui:VisualElement name="red-panel">
+            <ui:Button class="red-button" text="测试测试测试1" />
+            <ui:Button class="red-button" text="测试测试测试2" />
+            <ui:Button class="red-button" text="测试测试测试3" />
+            <ui:Button class="red-button" text="测试测试测试4" />
+            <ui:Button class="red-button" text="测试测试测试5" />
+            <ui:Button class="red-button" text="测试测试测试6" />
+            <ui:Button class="red-button" text="测试测试测试7" />
+            <ui:Button class="red-button" text="测试测试测试8" />
+            <ui:Button class="red-button" text="测试测试测试9" />
+            <ui:Button class="red-button" text="测试测试测试10" />
+            <ui:Button class="red-button" text="测试测试测试11" />
+            <ui:Button class="red-button" text="测试测试测试12" />
+            <ui:Button class="red-button" text="测试测试测试13" />
+            <ui:Button class="red-button" text="测试测试测试14" />
+            <ui:Button class="red-button" text="测试测试测试15" />
+            <ui:Button class="red-button" text="测试测试测试16" />
+            <ui:Button class="red-button" text="测试测试测试17" />
+        </ui:VisualElement>
+        <ui:VisualElement name="blue-panel">
+            <ui:Button class="blue-button" text="测试测试测试1" />
+            <ui:Button class="blue-button" text="测试测试测试2" />
+            <ui:Button class="blue-button" text="测试测试测试3" />
+            <ui:Button class="blue-button" text="测试测试测试4" />
+            <ui:Button class="blue-button" text="测试测试测试5" />
+            <ui:Button class="blue-button" text="测试测试测试6" />
+            <ui:Button class="blue-button" text="测试测试测试7" />
+            <ui:Button class="blue-button" text="测试测试测试8" />
+            <ui:Button class="blue-button" text="测试测试测试9" />
+            <ui:Button class="blue-button" text="测试测试测试10" />
+            <ui:Button class="blue-button" text="测试测试测试11" />
+            <ui:Button class="blue-button" text="测试测试测试12" />
+            <ui:Button class="blue-button" text="测试测试测试13" />
+            <ui:Button class="blue-button" text="测试测试测试14" />
+            <ui:Button class="blue-button" text="测试测试测试15" />
+            <ui:Button class="blue-button" text="测试测试测试16" />
+            <ui:Button class="blue-button" text="测试测试测试17" />
+        </ui:VisualElement>
+        
+        
+        
+        
+    </ui:VisualElement>
+</ui:UXML>

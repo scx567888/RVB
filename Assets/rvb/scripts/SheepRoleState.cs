@@ -22,6 +22,10 @@
         SpinSpurt = 18,
         SpinAtk = 19,
         Rigidity = 20,
-        ChargePlus = 21
+        ChargePlus = 21,
+        Freeze = 22,
+        Destruction = 23,
+        Bombard = 24,
+        Support = 25
     }
 }

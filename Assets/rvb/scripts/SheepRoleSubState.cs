@@ -32,5 +32,9 @@
         Start = 28,
         Charge = 29,
         ChargePlus = 30,
+        Freeze = 31,
+        Destruction = 32,
+        Bombard = 33,
+        Support = 34,
     }
 }

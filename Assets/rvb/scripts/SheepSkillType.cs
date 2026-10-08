@@ -14,6 +14,9 @@
         SpinAtk = 12,      // 旋转攻击
         SpinSpurt = 13,    // 旋转冲刺
         Rigidity = 14,     // 僵直 / 硬直
-        ChargePlus = 15    // 强化冲锋
+        ChargePlus = 15,   // 强化冲锋
+        Freeze = 16,       // 冰冻 (控制 + 逐渐解冻)
+        Bombard = 17,      // 天降轰炸 (随机落点炮击)
+        Support = 18       // 全局支援 (解冻 / 技能重置)
     }
 }
