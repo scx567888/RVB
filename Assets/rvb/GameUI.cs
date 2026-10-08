@@ -17,14 +17,14 @@ public class GameUI : MonoBehaviour
 
         redPanel = root.Q<VisualElement>("red-panel");
         bluePanel = root.Q<VisualElement>("blue-panel");
-
-        // 清空默认测试按钮
-        redPanel.Clear();
-        bluePanel.Clear();
     }
 
     private IEnumerator Start()
     {
+        // 清空默认测试按钮
+        redPanel.Clear();
+        bluePanel.Clear();
+
         // 等待 SheepMgr 初始化
         while (SheepMgr.inc == null)
         {
