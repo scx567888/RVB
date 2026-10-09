@@ -129,20 +129,31 @@ namespace sheep {
         // **************************** 逻辑相关 ***************************
 
         public void petsAction() {
+            var intents = new List<Intent>();
+            
             // 所有 pet 行动, 执行单位自身逻辑, 更新各类意图和逻辑状态
-            foreach (var pet in pets) {
-                pet.action(this);
+            foreach (var pet in pets)
+            {
+                var petIntent= pet.tick(this);
+                foreach (var intent in petIntent)
+                {
+                    intents.Add(intent);
+                }
             }
 
             // 更新 pet 实际位置 
-            foreach (var pet in pets) {
-                // 1. 计算自主位移
-                var selfMove = moveSystem.calculateSelfMove(pet);
-                // 2. 根据碰撞修正最终位移
-                var finalMove = collideSystem.calculateCollisionMove(pet, selfMove, this);
-                // 4. 应用最终位移
-                pet.x += finalMove.x;
-                pet.y += finalMove.y;
+            foreach (var intent in intents) {
+                if (intent is PetMoveIntent  petMoveIntent)
+                {
+                    // 1. 计算自主位移
+                    var selfMove = moveSystem.calculateSelfMove(petMoveIntent);    
+                      
+                    // 2. 根据碰撞修正最终位移
+                    var finalMove = collideSystem.calculateCollisionMove(petMoveIntent.entityId, selfMove, this);
+                    // 4. 应用最终位移
+                    petMoveIntent.entityId.x += finalMove.x;
+                    petMoveIntent.entityId.y += finalMove.y;
+                }
             }
         }
 

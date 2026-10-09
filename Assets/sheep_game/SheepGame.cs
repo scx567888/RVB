@@ -129,7 +129,7 @@ namespace sheep_game {
         public void renderPet(Pet pet, float alpha) {
             Vector3 renderPosition;
             // 判断是否启用线性插值
-            if (useLerp && pet.moveIntent.moveMode != PetMoveMode.TELEPORT) {
+            if (useLerp && pet.moveMode != PetMoveMode.TELEPORT) {
                 renderPosition = Vector3.Lerp(
                     new Vector3(pet.renderHandle.lastX, 0, pet.renderHandle.lastY),
                     new Vector3(pet.x, 0, pet.y),
@@ -153,9 +153,7 @@ namespace sheep_game {
                 for (int i = 0; i < 500; i++) {
                     sheepWorld.addPrePet(new Pet() {
                         id = sheepWorld.getNextPetId(),
-                        moveIntent = new PetMoveIntent() {
-                            moveSpeed = sheepWorld.randomFloat(0.25f, 0.5f)
-                        },
+                        moveSpeed = sheepWorld.randomFloat(0.25f, 0.5f),
                         collideIntent = new PetCollideIntent() {
                             // collideRadius = 0.5f,
                             // collideMoveScale = 1,
@@ -174,9 +172,7 @@ namespace sheep_game {
                 for (int i = 0; i < 500; i++) {
                     sheepWorld.addPrePet(new Pet() {
                         id = sheepWorld.getNextPetId(),
-                        moveIntent = new PetMoveIntent() {
-                            moveSpeed = sheepWorld.randomFloat(0.5f, 1f)
-                        },
+                        moveSpeed = sheepWorld.randomFloat(0.5f, 1f),
                         collideIntent = new PetCollideIntent() {
                             // collideRadius = 0.5f,
                             // collideMoveScale = 1,
