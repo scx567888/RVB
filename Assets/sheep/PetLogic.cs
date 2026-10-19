@@ -1,20 +1,26 @@
-﻿namespace sheep {
+﻿using System.Collections.Generic;
+
+namespace sheep {
     // 测试
     public class PetLogic {
         public static PetLogic INSTANCE = new PetLogic();
 
-        public void tick(Pet pet, SheepWorld sheepWorld) {
+        public IEnumerable<Intent> tick(Pet pet, SheepWorld sheepWorld) {
+            var moveIntent=new PetMoveIntent();
+            moveIntent.entityId = pet;
+            moveIntent.moveSpeed=pet.moveSpeed;
             // 简化的 索敌逻辑 
             if (pet.id % 2 == 0) {
-                pet.moveIntent.moveMode = PetMoveMode.TELEPORT;
-                pet.moveIntent.targetX = sheepWorld.bossX;
-                pet.moveIntent.targetY = sheepWorld.bossY;
+                moveIntent.moveMode = PetMoveMode.TELEPORT;
+                moveIntent.targetX = sheepWorld.bossX;
+                moveIntent.targetY = sheepWorld.bossY;
             }
             else {
-                pet.moveIntent.moveMode = PetMoveMode.TARGET;
-                pet.moveIntent.targetX = sheepWorld.boss1X;
-                pet.moveIntent.targetY = sheepWorld.boss1Y;
+                moveIntent.moveMode = PetMoveMode.TARGET;
+                moveIntent.targetX = sheepWorld.boss1X;
+                moveIntent.targetY = sheepWorld.boss1Y;
             }
+            return new[] { moveIntent };
         }
     }
 }

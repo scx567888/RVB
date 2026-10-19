@@ -7,8 +7,9 @@ namespace sheep {
         // x 当前位置
         // y 当前位置
         // 返回需要移动的距离
-        public Vector2 calculateSelfMove(Pet pet) {
-            var moveIntent = pet.moveIntent;
+        public Vector2 calculateSelfMove(PetMoveIntent petMoveIntent) {
+            var moveIntent = petMoveIntent;
+            var pet = petMoveIntent.entityId;
             var x = pet.x;
             var y = pet.y;
 

@@ -1,6 +1,9 @@
 ﻿namespace sheep {
     /// 自主移动意图
-    public class PetMoveIntent {
+    public class PetMoveIntent : Intent{
+        
+        public Pet entityId;
+        
         // ********************** 自主移动相关 ***********************
 
         // 自主移动模式

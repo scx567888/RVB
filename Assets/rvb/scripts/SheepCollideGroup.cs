@@ -10,6 +10,7 @@
         GROUP6 = 6,
         GROUP7 = 7,
         GROUP8 = 8,
+        GROUP9 = 9,
         
         Count
     }

@@ -1,7 +1,7 @@
-﻿namespace sheep {
-    public class Pet {
-        // 唯一 ID
-        public int id;
+﻿using System.Collections.Generic;
+
+namespace sheep {
+    public class Pet : Entity {
 
         // 唯一真实位置 X
         public float x;
@@ -13,7 +13,9 @@
         public int frame;
 
         // 移动意图
-        public PetMoveIntent moveIntent;
+        public float moveSpeed;
+        
+        public PetMoveMode moveMode;
 
         // 碰撞意图
         public PetCollideIntent collideIntent;
@@ -26,12 +28,14 @@
         // 是否闪光
         public bool flash = false;
 
-        public void action(SheepWorld sheepWorld) {
+        public override IEnumerable<Intent> tick(SheepWorld world)
+        {
             // 1, 执行单位自身逻辑, 更新各类意图和逻辑状态
-            PetLogic.INSTANCE.tick(this, sheepWorld);
+            var intents = PetLogic.INSTANCE.tick(this, world);
 
             // 2, 更新逻辑帧
             frame++;
+            return intents;
         }
     }
 }
