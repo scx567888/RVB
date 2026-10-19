@@ -104,7 +104,7 @@ namespace rvb.scripts {
             frameCnt = 3,
             waveCnt = 8,
             bulletId = new[]{113,115},
-            startZ = 1200,
+            startZ = 4000,
             scatterR = 900,
             endFrame = 37,
             endState = (int)SheepRoleState.Dead

@@ -1348,7 +1348,7 @@ namespace rvb.scripts {
             startState = SheepRoleState.Spurt,
             formationId = 4,
             runEndX = 0,
-            runSpeed = 4200,
+            runSpeed = 8500,
             walkSpeed = 1200,
             isSpurtAnim = true,
             skillSpurt = 120002,
